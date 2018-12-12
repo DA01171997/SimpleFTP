@@ -9,11 +9,6 @@ SERVER_SOCK.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 SERVER_SOCK.bind(('localhost',PORT_NUM))
 SERVER_SOCK.listen(1)
 print("Server Now Listening...")
-# filename=getFilesName()
-# print(len(filename))
-# print(filename)
-# temp = padString(filename,40)
-# print(len(temp))
 while 1:
     SER2CLIENT_CONNECTION, addr = SERVER_SOCK.accept()
     try:
