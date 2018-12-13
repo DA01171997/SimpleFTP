@@ -41,31 +41,18 @@ def getMenuOption():
     option = input("fpt> ")
     return option
 
-def readLines(conn, recv_buffer = 4096, delim='\n'):
-    buffer = ''
-    data = True
-    while data:
-        data = conn.recv(recv_buffer)
-        buffer += data.decode()
-        #while buffer.find(delim) != -1:
-        #    line, buffer = buffer.split('n',1)
-        yield buffer
-
 def padString(string, size):
     tempString = str(len(string))
     while (len(tempString) < size):
         tempString+=" "
     return tempString
 
+
 def processNPrintNameFile(namesFile):
     files = namesFile.split(",")
     print("Files On Server Are:")
     for file in files:
         print("                     "+file)
-
-def getFilenameFromUser():
-        filename = input("What file would you like to get?") 
-        return
 
 def checkFileExist(fileName):
     for _, _, files in os.walk("./fileOnServer"):
@@ -104,3 +91,40 @@ def continueOption():
             return False
         else:
             print("Invalid Option. Please Choose again")
+
+def downloadFileFromServ(conn, fileName, size):
+    directName = "DLFromServ/"
+    if not os.path.exists(directName):
+        os.mkdir(directName)
+    tempBuf = ''
+    data = ''
+    with open(directName+fileName, "w") as f:
+        print('size is', size)
+        while len(tempBuf) < size:
+            print('tempBuf is', tempBuf)
+            tempBuf = conn.recv(size)
+            if not tempBuf:
+                break
+            data += tempBuf.decode()
+            print(data)
+            f.write(data)
+        f.close()
+
+def padFileNameSize(fileNameSize, size):
+    tempString = str(fileNameSize)
+    while (len(tempString) < size):
+        tempString+=" "
+    return tempString
+
+def sendDownloadFileToClient(conn, fileName):
+    with open(fileName, 'rb') as f:
+        while True:
+            contents = f.read()
+            print(contents.decode())
+
+            #send contents
+            sendStringFunc(conn, contents.decode())
+            
+            if not contents:
+                break
+        f.close()

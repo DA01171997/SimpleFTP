@@ -25,7 +25,7 @@ while(not quitFlag):
         stopGetFlag = False
         while(not stopGetFlag):
             #get what file user wants to send
-            fileName = input("What file would you like to send? ")
+            fileName = input("What file would you like to receive? ")
 
             #send server size of fileName
             fileNameSizePadded = padString(fileName,40)
@@ -38,8 +38,16 @@ while(not quitFlag):
             ack = recieveACK(CLIENT_SOCK)
             print(ack)
             if ack=="Exst":
+
+                #get size of file from server
+                downloadFileSize = int(recieveStringFunc(CLIENT_SOCK, 40))
+                print('downloadFileSize is', downloadFileSize)
+
+                #download file from server
+                downloadFileFromServ(CLIENT_SOCK, fileName, downloadFileSize)
+
                 stopGetFlag = True
-                print("sending file")
+                print("receiving file")
             else:
                 print("File doesn't exist")
                 #continue get or quit?

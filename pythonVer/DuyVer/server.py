@@ -38,9 +38,27 @@ while 1:
                     #check if fileName exists
                     print(checkFileExist(fileName))
 
+
                     #send ACK   
                     if(checkFileExist(fileName)):
                         sendACK(SER2CLIENT_CONNECTION, 2)
+
+                        #get local file name
+                        localFileName = './fileOnServer/' + fileName
+
+                        #get localFileName size
+                        localFileNameSize = os.path.getsize(localFileName)
+                        print('local file name size is ', localFileNameSize)
+                        
+                        localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
+                        print('local file name size padded is', localFileNameSizePadded)
+
+                        #send client the size of file
+                        sendStringFunc(SER2CLIENT_CONNECTION, localFileNameSizePadded)
+                                
+                        #send file to client
+                        sendDownloadFileToClient(SER2CLIENT_CONNECTION, localFileName)
+
                         stopGetFlag = True
                     else:
                         sendACK(SER2CLIENT_CONNECTION, 3)
@@ -50,6 +68,10 @@ while 1:
 
             elif option == "putt":
                 print("put")
+
+
+
+
             elif option == "lsls":
                 print("ls")
 
