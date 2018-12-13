@@ -24,37 +24,29 @@ while 1:
             if option == "gett":
                 print("get")
                 
-                # stopGetFlag = False
-                # while(not stopGetFlag): 
-                #     #receive the fileName size
-                #     fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
-                #     print(fileNameSize)
-
-                #     #receive the fileName
-                #     fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
-                #     print(fileName)
-
-
-                #     #check if fileName exists
-                #     print(checkFileExist(fileName))
-
-                #     #send ACK   
-                #     if(checkFileExist(fileName)):
-
-                     #receive the fileName size
-                fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
-                print(fileNameSize)
+                stopGetFlag = False
+                while(not stopGetFlag): 
+                    #receive the fileName size
+                    fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
+                    print(fileNameSize)
 
                     #receive the fileName
-                fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
-                print(fileName)
+                    fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
+                    print(fileName)
 
 
                     #check if fileName exists
-                print(checkFileExist(fileName))
+                    print(checkFileExist(fileName))
 
-                #     #send ACK   
-                #     if(checkFileExist(fileName)):
+                    #send ACK   
+                    if(checkFileExist(fileName)):
+                        sendACK(SER2CLIENT_CONNECTION, 2)
+                        stopGetFlag = True
+                    else:
+                        sendACK(SER2CLIENT_CONNECTION, 3)
+                        if recieveACK(SER2CLIENT_CONNECTION) == "NCnt":
+                            stopGetFlag = True
+
 
             elif option == "putt":
                 print("put")

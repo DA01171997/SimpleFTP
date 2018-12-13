@@ -22,16 +22,33 @@ while(not quitFlag):
         option="gett"
         sendStringFunc(CLIENT_SOCK,option)
         
-        #get what file user wants to send
-        fileName = input("What file would you like to send? ")
+        stopGetFlag = False
+        while(not stopGetFlag):
+            #get what file user wants to send
+            fileName = input("What file would you like to send? ")
 
-        #send server size of fileName
-        fileNameSizePadded = padString(fileName,40)
-        sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
+            #send server size of fileName
+            fileNameSizePadded = padString(fileName,40)
+            sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
 
-        #send server the fileName
-        sendStringFunc(CLIENT_SOCK, fileName)
+            #send server the fileName
+            sendStringFunc(CLIENT_SOCK, fileName)
 
+            #check ACK
+            ack = recieveACK(CLIENT_SOCK)
+            print(ack)
+            if ack=="Exst":
+                stopGetFlag = True
+                print("sending file")
+            else:
+                print("File doesn't exist")
+                #continue get or quit?
+                if(not continueOption()):
+                    stopGetFlag = True
+                    sendACK(CLIENT_SOCK,5)
+                else:
+                    sendACK(CLIENT_SOCK,1)
+     
     elif option == "put":
         option="putt"
         sendStringFunc(CLIENT_SOCK,option)
@@ -46,7 +63,7 @@ while(not quitFlag):
         #process the nameFile string and print
         namesFile = recieveStringFunc(CLIENT_SOCK, namesFileSize) 
         processNPrintNameFile(namesFile)
-
+        
     elif option == "quit":
         sendStringFunc(CLIENT_SOCK,option)
         quitFlag = True

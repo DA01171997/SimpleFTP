@@ -73,3 +73,34 @@ def checkFileExist(fileName):
             if file == fileName:
                     return True
     return False
+
+def sendACK(conn, typeNum):
+    if typeNum ==0:
+        type = "Errr"
+    elif typeNum ==1:
+        type = "Okay"
+    elif typeNum ==2:
+        type = "Exst"
+    elif typeNum ==3:
+        type = "NEst"
+    elif typeNum ==4:
+        type = "Cont"
+    elif typeNum ==5:
+        type = "NCnt"
+    sendStringFunc(conn, type)
+
+def recieveACK(conn):
+    ackSize = 4
+    ack = recieveStringFunc(conn, ackSize)
+    return ack
+
+def continueOption():
+    stopOption = False
+    while (not stopOption):
+        subOption = input("Try again?(Y/N) ")
+        if subOption == 'Y' or subOption  == 'y':
+            return True
+        elif subOption == 'N' or subOption  == 'n':
+            return False
+        else:
+            print("Invalid Option. Please Choose again")
