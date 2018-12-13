@@ -41,16 +41,6 @@ def getMenuOption():
     option = input("fpt> ")
     return option
 
-def readLines(conn, recv_buffer = 4096, delim='\n'):
-    buffer = ''
-    data = True
-    while data:
-        data = conn.recv(recv_buffer)
-        buffer += data.decode()
-        #while buffer.find(delim) != -1:
-        #    line, buffer = buffer.split('n',1)
-        yield buffer
-
 def padString(string, size):
     tempString = str(len(string))
     while (len(tempString) < size):
