@@ -23,6 +23,39 @@ while 1:
             option = recieveStringFunc(SER2CLIENT_CONNECTION, 4)
             if option == "gett":
                 print("get")
+                
+                # stopGetFlag = False
+                # while(not stopGetFlag): 
+                #     #receive the fileName size
+                #     fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
+                #     print(fileNameSize)
+
+                #     #receive the fileName
+                #     fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
+                #     print(fileName)
+
+
+                #     #check if fileName exists
+                #     print(checkFileExist(fileName))
+
+                #     #send ACK   
+                #     if(checkFileExist(fileName)):
+
+                     #receive the fileName size
+                fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
+                print(fileNameSize)
+
+                    #receive the fileName
+                fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
+                print(fileName)
+
+
+                    #check if fileName exists
+                print(checkFileExist(fileName))
+
+                #     #send ACK   
+                #     if(checkFileExist(fileName)):
+
             elif option == "putt":
                 print("put")
             elif option == "lsls":

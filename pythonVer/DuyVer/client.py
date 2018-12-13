@@ -21,6 +21,17 @@ while(not quitFlag):
     if option == "get":
         option="gett"
         sendStringFunc(CLIENT_SOCK,option)
+        
+        #get what file user wants to send
+        fileName = input("What file would you like to send? ")
+
+        #send server size of fileName
+        fileNameSizePadded = padString(fileName,40)
+        sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
+
+        #send server the fileName
+        sendStringFunc(CLIENT_SOCK, fileName)
+
     elif option == "put":
         option="putt"
         sendStringFunc(CLIENT_SOCK,option)

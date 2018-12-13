@@ -63,3 +63,13 @@ def processNPrintNameFile(namesFile):
     for file in files:
         print("                     "+file)
 
+def getFilenameFromUser():
+        filename = input("What file would you like to get?") 
+        return
+
+def checkFileExist(fileName):
+    for _, _, files in os.walk("./fileOnServer"):
+        for file in files:
+            if file == fileName:
+                    return True
+    return False
