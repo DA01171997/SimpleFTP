@@ -1,9 +1,39 @@
+import sys, re
 from socket import *
 from supportFunc import *
 
+IP_PATTERN = re.compile("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
+PORT_PATTERN = re.compile("[0-9]{1,5}")
+
+if bool(IP_PATTERN.match('127.0.0.1')) == True:
+    print('hello')
+
+if len(sys.argv) == 1:
+    sys.exit('Error -- Must have IP and Port Number Args')
+elif len(sys.argv) == 2:
+    if bool(IP_PATTERN.match(sys.argv[1])) != True:
+        print('Error:', sys.argv[1], 'does not match the correct IP format')
+    print('Error: Port Number argument not supplied')
+    sys.exit(0)
+elif len(sys.argv) == 3:
+    err = 0
+    if bool(IP_PATTERN.match(sys.argv[1])) != True:
+        print('Error:', sys.argv[1], 'does not match the correct IP format')
+        err = 1
+    if bool(PORT_PATTERN.match(sys.argv[2])) != True:
+        print('Error:', sys.argv[2], 'does not match the correct Port Number format')
+        err = 1
+    if err == 1:
+        sys.exit(0)
+
+
+IP_TO_CONNECT = sys.argv[1]
+PORT_NUMBER = int(sys.argv[2])
+
 PORT_NUM = 8080
 CLIENT_SOCK = socket(AF_INET, SOCK_STREAM)
-CLIENT_SOCK.connect(('localhost', PORT_NUM))
+CLIENT_SOCK.connect((IP_TO_CONNECT, PORT_NUMBER))
+#CLIENT_SOCK.connect(('localhost', PORT_NUM))
 print("Client Connecting...")
 
 #let server know client is connected
