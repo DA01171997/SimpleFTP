@@ -1,110 +1,131 @@
 from socket import *
-from time import sleep
+from supportFunc import *
 
-IP_ADDR = '192.168.0.31'
-PORT_NUMBER = 8080
-SERVER_ADDR = (IP_ADDR, PORT_NUMBER)
+PORT_NUM = 8080
+CLIENT_SOCK = socket(AF_INET, SOCK_STREAM)
+CLIENT_SOCK.connect(('localhost', PORT_NUM))
+print("Client Connecting...")
 
-def send_buffer_size(conn, bufferSize):
-    try:
-        conn.send(bufferSize.encode())
-        print('Successfully sent buffer size of', bufferSize, 'to', IP_ADDR)
-    except:
-        print('ERROR: Buffer size cannot be sent to server')
-    finally:
-        print()
+#let server know client is connected
+#this message will be 26 bytes
+connectMessage="Client Connected to Server"
+sendStringFunc(CLIENT_SOCK,connectMessage)
 
-def send_message(conn, message, bufferSize):
-    try:
-        conn.send(message.encode())
-        print('Successfully sent message \'' + message + '\' to server')
-    except:
-        print('ERROR: Message cannot be sent or cannot receive response from server')
-    finally:
-        response = print_response_from_server(conn, bufferSize)
-        print(response)
+#get menu option
+#IMPORTANT NOTE: all option are padded to be 4 bytes
+quitFlag = False
+print("What would you like to do?")
+menu()
+while(not quitFlag):
+    option = getMenuOption()
+    if option == "get":
+        option="gett"
+        sendStringFunc(CLIENT_SOCK,option)
+        
+        stopGetFlag = False
+        while(not stopGetFlag):
+            #get what file user wants to send
+            fileName = input("What file would you like to receive? ")
 
-def get_buffer_size_from_server(conn):
-    try:
-        response = conn.recv(1024)
-        print(response)
-        response = int(response.decode())
-    except:
-        print('ERROR: Could not receive a response from the server')
-    finally:
-        print()
-    return response
+            #send server size of fileName
+            fileNameSizePadded = padString(fileName,40)
+            sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
 
-def print_response_from_server(conn, bufferSize):
-    try:
-        response = ""
-        while len(response) != bufferSize:
-            tmpBuff = conn.recv(bufferSize)
-            if not tmpBuff:
-                break
-            response += tmpBuff.decode()
-    except:
-        print('ERROR: Could not receive a response from the server')
-    finally:
-        print()
-    return response
+            #send server the fileName
+            sendStringFunc(CLIENT_SOCK, fileName)
+
+            #check ACK
+            ack = recieveACK(CLIENT_SOCK)
+            if ack=="Exst":
+
+                #get size of file from server
+                downloadFileSize = int(recieveStringFunc(CLIENT_SOCK, 40))
+                print('downloadFileSize is', downloadFileSize)
+
+                #download file from server
+                downloadFile(CLIENT_SOCK, fileName, downloadFileSize, "server")
+
+                stopGetFlag = True
+            else:
+                print("File doesn't exist")
+                #continue get or quit?
+                if(not continueOption()):
+                    stopGetFlag = True
+                    sendACK(CLIENT_SOCK,5)
+                else:
+                    sendACK(CLIENT_SOCK,1)
+     
+    elif option == "put":
+        option="putt"
+        sendStringFunc(CLIENT_SOCK,option)
+
+        stopPutFlag = False
+        while(not stopPutFlag):
+            #put what file user wants to upload
+            fileName = input("What file would you like to upload to server? ")
+
+            #if file exists on client side
+            if checkFileExists(fileName,"client"):
+                sendACK(CLIENT_SOCK, 1)
+
+                #upload fileName's name size to server
+                fileNameSizePadded = padString(fileName,40)
+                sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
+
+                #upload fileName's name to server
+                sendStringFunc(CLIENT_SOCK, fileName)
+
+                #get localFileName size and pad from client side
+                localFileNameSize = os.path.getsize(fileName)
+                localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
+
+                #upload the size of file to server
+                sendStringFunc(CLIENT_SOCK, localFileNameSizePadded)
+
+                #upload file to server
+                sendDownloadFile(CLIENT_SOCK, fileName)
+                stopPutFlag = True
+            else:
+                print("File cannot be uploaded -- does not exist")
+                sendACK(CLIENT_SOCK, 0)
+                #continue get or quit
+                if(not continueOption()):
+                    stopGetFlag = True
+                    sendACK(CLIENT_SOCK,5)
+                else:
+                    sendACK(CLIENT_SOCK,1)
+
+
+
+                    
+                    
 
 
 
 
-###### USE THIS HERE DUY ######
-def get_file_from_server(fileName, conn, bufferSize):
-    try:
-        response = ""
-        with open(fileName, "w") as f:
-            while len(response) != bufferSize:
-                newBuff = conn.recv(bufferSize)
-                if not newBuff:
-                    break
-                response += newBuff.decode()
-                f.write(response)
-            f.close()
-    except:
-        print('ERROR')
-    finally:
-        print()
-    return response
-################################
+
+            
 
 
+    elif option == "ls":
+        option="lsls"
+        sendStringFunc(CLIENT_SOCK,option)
 
+        #receive the namesFile size
+        namesFileSize = int(recieveStringFunc(CLIENT_SOCK, 40))
 
+        #receive the namesFile
+        #process the nameFile string and print
+        namesFile = recieveStringFunc(CLIENT_SOCK, namesFileSize) 
+        processNPrintNameFile(namesFile)
+        
+    elif option == "quit":
+        sendStringFunc(CLIENT_SOCK,option)
+        quitFlag = True
+    elif option == "help":
+        print("What would you like to do?")
+        menu()
+    else:
+        print("Invalid Option. Please Choose again")
 
-def main():
-    conn = socket(AF_INET, SOCK_STREAM)
-#    conn.connect((IP_ADDR, PORT_NUMBER))
-    conn.connect(('localhost', PORT_NUMBER))
-
-    print('\n--------------------')
-    print('\nConnected to server at:\nIP Address:', IP_ADDR, '\nPort Number:', PORT_NUMBER, '\n')
-    print('--------------------')
-
-    bufferSize = get_buffer_size_from_server(conn) #1
-
-    print('Files on server:')
-    response = print_response_from_server(conn, bufferSize) #2
-    print(response)
-
-    answer = input('Enter name of file to download: ') #3
-    print('\n--------------------\n')
-    bufferSize = len(answer)   
-
-    send_buffer_size(conn, str(bufferSize)) #3
-
-    send_message(conn, answer, bufferSize)
-
-    fileSize = get_buffer_size_from_server(conn) # get the file size
-    print(fileSize)
-
-    response = get_file_from_server(answer, conn, fileSize) # write to file until filesize is met
-    print(response)
-
-    conn.close()
-
-if __name__ == "__main__":
-    main()
+CLIENT_SOCK.close()
