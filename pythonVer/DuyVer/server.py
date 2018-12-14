@@ -67,6 +67,35 @@ while 1:
 
             elif option == "putt":
                 print("put")
+                stopPutFlag = False
+                putFlag = False
+                while( not stopPutFlag):
+                    ack = recieveACK(SER2CLIENT_CONNECTION)
+                    if ack == "Okay":
+                        stopPutFlag = True
+                        putFlag = True
+                    elif ack == "NCnt":
+                        stopPutFlag = True
+                print(" put released")
+                print(putFlag)
+
+                #if ack for put is good
+                if (putFlag):
+                    print("File Receiving...")
+
+
+                    #get file name's size
+                    fileNameSizePadd = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
+
+                    #get name of file from client
+                    fileName = recieveStringFunc(SER2CLIENT_CONNECTION,fileNameSizePadd)
+                    print(fileName)
+                    #get size of file from client
+                    downloadFileSize = int(recieveStringFunc(SER2CLIENT_CONNECTION, 40))
+                    print('downloadFileSize is', downloadFileSize)
+
+                    #download file from server
+                    downloadFile(SER2CLIENT_CONNECTION, fileName, downloadFileSize, "client")
 
             elif option == "lsls":
                 print("ls")
@@ -75,7 +104,7 @@ while 1:
                 #2 IMPORTANT NOTE: get namesFile size and pad it to 40 bytes with spaces
                 #3 send client the size
                 namesFile=getNameFile("server")
-                namesFileSizePadded = padString(namesFile,40)
+                namesFileSizePadded = padStringLen(namesFile,40)
                 sendStringFunc(SER2CLIENT_CONNECTION, namesFileSizePadded)
                 
                 #4 send namesFile

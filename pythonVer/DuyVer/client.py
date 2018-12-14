@@ -24,11 +24,11 @@ while(not quitFlag):
         
         stopGetFlag = False
         while(not stopGetFlag):
-            #get what file user wants to send
+            #get what file user wants to get
             fileName = input("What file would you like to receive? ")
 
             #send server size of fileName
-            fileNameSizePadded = padString(fileName,40)
+            fileNameSizePadded = padStringLen(fileName,40)
             sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
 
             #send server the fileName
@@ -58,6 +58,49 @@ while(not quitFlag):
     elif option == "put":
         option="putt"
         sendStringFunc(CLIENT_SOCK,option)
+
+        #get what file user want to send
+        stopPutFlag = False
+        putFlag = False
+        fileName=""
+        while( not stopPutFlag):
+            fileName = input("What file would you like to send? ")
+            if (checkFileExist(fileName,"client")):
+                stopPutFlag = True
+                putFlag = True
+                print("exists")
+                sendACK(CLIENT_SOCK,1)
+            else:
+                print("File doesn't exist")
+                #continue get or quit?
+                if(not continueOption()):
+                    stopPutFlag = True
+                    sendACK(CLIENT_SOCK,5)
+                else:
+                    sendACK(CLIENT_SOCK,4)
+        if (putFlag):
+            print("File Uploading...")
+
+            #send file size
+            fileNameSizePadd = padStringLen(fileName,40)
+            sendStringFunc(CLIENT_SOCK,fileNameSizePadd)
+
+            #send file name
+            localFileNamePadded = padString(fileName,40)
+            sendStringFunc(CLIENT_SOCK,localFileNamePadded)
+            
+            #get file size
+            localFileNameSize = os.path.getsize("./"+fileName)
+            localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
+
+            #send file size to server
+            sendStringFunc(CLIENT_SOCK, localFileNameSizePadded)
+
+            #send the file to server
+            sendDownloadFile(CLIENT_SOCK, "./"+fileName)
+
+
+
     elif option == "ls":
         option="lsls"
         sendStringFunc(CLIENT_SOCK,option)

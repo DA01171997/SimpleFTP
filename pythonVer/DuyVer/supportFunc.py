@@ -45,8 +45,14 @@ def getMenuOption():
     option = input("fpt> ")
     return option
 
-def padString(string, size):
+def padStringLen(string, size):
     tempString = str(len(string))
+    while (len(tempString) < size):
+        tempString+=" "
+    return tempString
+
+def padString(string, size):
+    tempString = string
     while (len(tempString) < size):
         tempString+=" "
     return tempString
