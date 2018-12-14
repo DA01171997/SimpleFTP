@@ -5,9 +5,6 @@ from supportFunc import *
 IP_PATTERN = re.compile("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
 PORT_PATTERN = re.compile("[0-9]{1,5}")
 
-if bool(IP_PATTERN.match('127.0.0.1')) == True:
-    print('hello')
-
 if len(sys.argv) == 1:
     sys.exit('Error -- Must have IP and Port Number Args')
 elif len(sys.argv) == 2:
