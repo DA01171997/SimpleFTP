@@ -28,7 +28,6 @@ while 1:
                 while(not stopGetFlag): 
                     #receive the fileName size
                     fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
-                    print(fileNameSize)
 
                     #receive the fileName
                     fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
@@ -36,31 +35,31 @@ while 1:
 
 
                     #check if fileName exists
-                    print(checkFileExist(fileName))
+                    print(checkFileExist(fileName,"server"))
 
-
-                    #send ACK   
-                    if(checkFileExist(fileName)):
+                    
+                    #if file exist  ACK == Exst  
+                    if(checkFileExist(fileName,"server")):
+                        #send ACK
                         sendACK(SER2CLIENT_CONNECTION, 2)
 
                         #get local file name
                         localFileName = './fileOnServer/' + fileName
 
-                        #get localFileName size
+                        #get localFileName size and pad
                         localFileNameSize = os.path.getsize(localFileName)
                         print('local file name size is ', localFileNameSize)
-                        
                         localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
-                        print('local file name size padded is', localFileNameSizePadded)
 
                         #send client the size of file
                         sendStringFunc(SER2CLIENT_CONNECTION, localFileNameSizePadded)
                                 
                         #send file to client
-                        sendDownloadFileToClient(SER2CLIENT_CONNECTION, localFileName)
-
+                        sendDownloadFile(SER2CLIENT_CONNECTION, localFileName)
                         stopGetFlag = True
+                    #if file does not exist  ACK == NEst
                     else:
+                        #send ACK
                         sendACK(SER2CLIENT_CONNECTION, 3)
                         if recieveACK(SER2CLIENT_CONNECTION) == "NCnt":
                             stopGetFlag = True
@@ -69,22 +68,19 @@ while 1:
             elif option == "putt":
                 print("put")
 
-
-
-
             elif option == "lsls":
                 print("ls")
 
                 #1 get namesFile
                 #2 IMPORTANT NOTE: get namesFile size and pad it to 40 bytes with spaces
                 #3 send client the size
-                namesFile=getNameFile()
+                namesFile=getNameFile("server")
                 namesFileSizePadded = padString(namesFile,40)
                 sendStringFunc(SER2CLIENT_CONNECTION, namesFileSizePadded)
-                print("      sent nameFilesSize")
+                
                 #4 send namesFile
-                print("      sent nameFiles")
                 sendStringFunc(SER2CLIENT_CONNECTION, namesFile)
+            
             elif option == "quit":
                 print("quit")
                 quitFlag = True

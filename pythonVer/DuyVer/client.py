@@ -36,7 +36,6 @@ while(not quitFlag):
 
             #check ACK
             ack = recieveACK(CLIENT_SOCK)
-            print(ack)
             if ack=="Exst":
 
                 #get size of file from server
@@ -44,10 +43,9 @@ while(not quitFlag):
                 print('downloadFileSize is', downloadFileSize)
 
                 #download file from server
-                downloadFileFromServ(CLIENT_SOCK, fileName, downloadFileSize)
+                downloadFile(CLIENT_SOCK, fileName, downloadFileSize, "server")
 
                 stopGetFlag = True
-                print("receiving file")
             else:
                 print("File doesn't exist")
                 #continue get or quit?

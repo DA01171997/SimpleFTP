@@ -1,9 +1,13 @@
 import os
 from socket import *
 
-def getNameFile():
+def getNameFile(fromWhere):
+    if fromWhere == "server":
+        directName = "./fileOnServer"
+    elif fromWhere =="client":
+        directName = "."
     result=""
-    for _, _, files in os.walk("./fileOnServer"):
+    for _, _, files in os.walk(directName):
         for file in files:
             result += file + ','
     return result
@@ -54,8 +58,12 @@ def processNPrintNameFile(namesFile):
     for file in files:
         print("                     "+file)
 
-def checkFileExist(fileName):
-    for _, _, files in os.walk("./fileOnServer"):
+def checkFileExist(fileName, fromWhere):
+    if fromWhere == "server":
+            directName = "./fileOnServer"
+    elif fromWhere =="client":
+        directName = "."
+    for _, _, files in os.walk(directName):
         for file in files:
             if file == fileName:
                     return True
@@ -92,27 +100,20 @@ def continueOption():
         else:
             print("Invalid Option. Please Choose again")
 
-def downloadFileFromServ(conn, fileName, size):
-    directName = "DLFromServ/"
+def downloadFile(conn, fileName, size, fromWhere):
+    if fromWhere == "server":
+        directName = "DLFromServer/"
+    elif fromWhere =="client":
+        directName = "fileOnServer/"
     if not os.path.exists(directName):
         os.mkdir(directName)
-    #tempBuf = ''
     tempBuf = 0
-    data = ''
+    data = 0
+    print("Downloading...")
     with open(directName+fileName, "wb") as f:
-        #print('size is', size)
-        # while len(tempBuf) < size:
-        #     #print('tempBuf is', tempBuf)
-        #     tempBuf = conn.recv(size)
-        #     if not tempBuf:
-        #         break
-        #     data += tempBuf.decode()
-        #     #print(data)
-        #     f.write(data)
         while tempBuf < size:
             data=conn.recv(1024)
             tempBuf+=len(data)
-            print(tempBuf)
             if not data:
                 break
             f.write(data)
@@ -126,29 +127,16 @@ def padFileNameSize(fileNameSize, size):
         tempString+=" "
     return tempString
 
-def sendDownloadFileToClient(conn, fileName):
-    with open(fileName, 'rb') as f:
-        # while True:
-        #     contents = f.read(1024)
-        #     #print(contents.decode())
-
-        #     #send contents
-        #     #sendStringFunc(conn, contents)
-        #     conn.send(contents)
-        #     if not contents:
-        #         break
-        
+def sendDownloadFile(conn, fileName):
+    print("Sending...")
+    with open(fileName, 'rb') as f:        
         while True:
             contents = f.read(1024)
             bytesSent=0
-            #print(contents.decode())
-
-            #send contents
-            #sendStringFunc(conn, contents)
             if not contents:
                     break
             while bytesSent < len(contents):
                 bytesSent += conn.send(contents)
-                print(len(contents))
 
         f.close()
+    print("Send Completed")
