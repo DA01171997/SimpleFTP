@@ -65,7 +65,7 @@ while(not quitFlag):
             fileName = input("What file would you like to upload to server? ")
 
             #if file exists on client side
-            if checkFileExists(fileName,"client"):
+            if checkFileExist(fileName,"client"):
                 sendACK(CLIENT_SOCK, 1)
 
                 #upload fileName's name size to server
@@ -88,24 +88,12 @@ while(not quitFlag):
             else:
                 print("File cannot be uploaded -- does not exist")
                 sendACK(CLIENT_SOCK, 0)
-                #continue get or quit
+                #continue put or quit
                 if(not continueOption()):
-                    stopGetFlag = True
+                    stopPutFlag = True
                     sendACK(CLIENT_SOCK,5)
                 else:
                     sendACK(CLIENT_SOCK,1)
-
-
-
-                    
-                    
-
-
-
-
-
-            
-
 
     elif option == "ls":
         option="lsls"

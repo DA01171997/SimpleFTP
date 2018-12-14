@@ -44,7 +44,7 @@ while 1:
                         sendACK(SER2CLIENT_CONNECTION, 2)
 
                         #get local file name
-                        localFileName = './fileOnServer/' + fileName
+                        localFileName = 'fileOnServer/' + fileName
 
                         #get localFileName size and pad
                         localFileNameSize = os.path.getsize(localFileName)
@@ -69,22 +69,19 @@ while 1:
                 stopPutFlag = False
                 while(not stopPutFlag):
                     #check if client is okay to send connection
-                    ack = receiveACK(SER2CLIENT_CONNECTION)
+                    ack = recieveACK(SER2CLIENT_CONNECTION)
                     if ack == "Okay":
                         #receive the fileName's name size
                         fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
                         
                         #receive the fileName's name
-                        fileName = receiveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
-
-                        #set file to update
-                        updateFileName = './fileOnServer/' + fileName
+                        fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
 
                         #receive the file's size
-                        updateFileSize = int(recieveStringFunc(CLIENT_SOCK, 40))
+                        updateFileSize = int(recieveStringFunc(SER2CLIENT_CONNECTION, 40))
 
                         #receive the file's data from the client
-                        downloadFile(SERV2CLIENT_CONNECTION, updateFileName, updateFileSize, "client")
+                        downloadFile(SER2CLIENT_CONNECTION, fileName, updateFileSize, "client")
                         stopPutFlag = True
                     else:
                         #client is not able to send a file
