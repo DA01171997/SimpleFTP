@@ -96,19 +96,29 @@ def downloadFileFromServ(conn, fileName, size):
     directName = "DLFromServ/"
     if not os.path.exists(directName):
         os.mkdir(directName)
-    tempBuf = ''
+    #tempBuf = ''
+    tempBuf = 0
     data = ''
-    with open(directName+fileName, "w") as f:
-        print('size is', size)
-        while len(tempBuf) < size:
-            print('tempBuf is', tempBuf)
-            tempBuf = conn.recv(size)
-            if not tempBuf:
+    with open(directName+fileName, "wb") as f:
+        #print('size is', size)
+        # while len(tempBuf) < size:
+        #     #print('tempBuf is', tempBuf)
+        #     tempBuf = conn.recv(size)
+        #     if not tempBuf:
+        #         break
+        #     data += tempBuf.decode()
+        #     #print(data)
+        #     f.write(data)
+        while tempBuf < size:
+            data=conn.recv(1024)
+            tempBuf+=len(data)
+            print(tempBuf)
+            if not data:
                 break
-            data += tempBuf.decode()
-            print(data)
             f.write(data)
-        f.close()
+        if tempBuf == size:
+            print("Download Completed")
+    f.close()
 
 def padFileNameSize(fileNameSize, size):
     tempString = str(fileNameSize)
@@ -118,13 +128,27 @@ def padFileNameSize(fileNameSize, size):
 
 def sendDownloadFileToClient(conn, fileName):
     with open(fileName, 'rb') as f:
+        # while True:
+        #     contents = f.read(1024)
+        #     #print(contents.decode())
+
+        #     #send contents
+        #     #sendStringFunc(conn, contents)
+        #     conn.send(contents)
+        #     if not contents:
+        #         break
+        
         while True:
-            contents = f.read()
-            print(contents.decode())
+            contents = f.read(1024)
+            bytesSent=0
+            #print(contents.decode())
 
             #send contents
-            sendStringFunc(conn, contents.decode())
-            
+            #sendStringFunc(conn, contents)
             if not contents:
-                break
+                    break
+            while bytesSent < len(contents):
+                bytesSent += conn.send(contents)
+                print(len(contents))
+
         f.close()
