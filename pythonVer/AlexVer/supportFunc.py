@@ -1,4 +1,5 @@
 import os
+import re
 from socket import *
 
 def getNameFile(fromWhere):
@@ -22,7 +23,7 @@ def sendStringFunc(conn, string):
     while bytesSent !=len(string):
         bytesSent += conn.send(string[bytesSent:].encode())
 
-def recieveStringFunc(conn, size=1040):
+def recieveStringFunc(conn, size=40):
     tempBuf =""
     data=""
     while len(data) != size:
@@ -140,3 +141,42 @@ def sendDownloadFile(conn, fileName):
 
         f.close()
     print("Send Completed")
+
+def regexArgChecks(arguments):
+    IP_PATTERN = re.compile("([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|localhost)")
+    PORT_PATTERN = re.compile("[0-9]{1,5}")
+    print(arguments)
+
+    if len(arguments) == 1:
+        print('Error -- Must have IP and Port Number Args')
+        return False
+    elif len(arguments) == 2:
+        if bool(IP_PATTERN.match(arguments[1])) != True:
+            print('Error:', arguments[1], 'does not match the correct IP format')
+        print('Error: Port Number argument not supplied')
+        return False
+    elif len(arguments) == 3:
+        err = 0
+        if bool(IP_PATTERN.match(arguments[1])) != True:
+            print('Error:', arguments[1], 'does not match the correct IP format')
+            err = 1
+        if bool(PORT_PATTERN.match(arguments[2])) != True:
+            print('Error:', arguments[2], 'does not match the correct Port Number format')
+            err = 1
+        if err == 1:
+            return False
+    return True
+
+def downloadFTPConnection(ipAddr):
+    #create download FTP connection
+    FTP_DL_SOCK = socket(AF_INET, SOCK_STREAM)
+    FTP_DL_SOCK.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    FTP_DL_SOCK.bind((ipAddr, 0))
+    FTP_DL_SOCK.listen(1)
+    return FTP_DL_SOCK
+
+def uploadFTPConnection(ipAddr, PORT_NUM):
+    #create upload FTP connection
+    FTP_UL_SOCK = socket(AF_INET, SOCK_STREAM)
+    FTP_UL_SOCK.connect((ipAddr, PORT_NUM))
+    return FTP_UL_SOCK

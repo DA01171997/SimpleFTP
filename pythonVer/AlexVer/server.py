@@ -3,10 +3,18 @@ import os
 from socket import *
 from supportFunc import * 
 
-PORT_NUM = 8080
-SERVER_SOCK= socket(AF_INET, SOCK_STREAM)
+if regexArgChecks(sys.argv) != True:
+    sys.exit(0)
+
+IP_TO_CONNECT = sys.argv[1]
+PORT_NUMBER = int(sys.argv[2])
+
+#PORT_NUM = 8080
+SERVER_SOCK = socket(AF_INET, SOCK_STREAM)
 SERVER_SOCK.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-SERVER_SOCK.bind(('localhost',PORT_NUM))
+#SERVER_SOCK.bind(('localhost',PORT_NUM))
+SERVER_SOCK.bind((IP_TO_CONNECT, PORT_NUMBER))
+
 SERVER_SOCK.listen(1)
 print("Server Now Listening...")
 while 1:
@@ -21,27 +29,41 @@ while 1:
         quitFlag = False
         while(not quitFlag):
             option = recieveStringFunc(SER2CLIENT_CONNECTION, 4)
+
             if option == "gett":
-                print("get")
-                
+                print("get") #option received
+
+                #make new FTP connection
+                DOWNLOAD_FTP_SOCKET = downloadFTPConnection(IP_TO_CONNECT)
+
+                #get FTP port number
+                FTP_PORT = DOWNLOAD_FTP_SOCKET.getsockname()[1]
+                FTP_PORT_padded = padString(str(FTP_PORT),40)
+
+                #send FTP port number
+                sendStringFunc(SER2CLIENT_CONNECTION, FTP_PORT_padded)
+                sendStringFunc(SER2CLIENT_CONNECTION, str(FTP_PORT))
+
+                #set new connection for FTP
+                FTP_CONNECTION, newaddr = DOWNLOAD_FTP_SOCKET.accept()
+                print('\t\tFTP Connection Established on Port:', FTP_PORT)
+
                 stopGetFlag = False
-                while(not stopGetFlag): 
+                while(not stopGetFlag):
                     #receive the fileName size
-                    fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
+                    fileNameSize = int(recieveStringFunc(FTP_CONNECTION,40))
 
                     #receive the fileName
-                    fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
+                    fileName = recieveStringFunc(FTP_CONNECTION, fileNameSize)
                     print(fileName)
-
 
                     #check if fileName exists
                     print(checkFileExist(fileName,"server"))
 
-                    
                     #if file exist  ACK == Exst  
                     if(checkFileExist(fileName,"server")):
                         #send ACK
-                        sendACK(SER2CLIENT_CONNECTION, 2)
+                        sendACK(FTP_CONNECTION, 2)
 
                         #get local file name
                         localFileName = 'fileOnServer/' + fileName
@@ -52,42 +74,65 @@ while 1:
                         localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
 
                         #send client the size of file
-                        sendStringFunc(SER2CLIENT_CONNECTION, localFileNameSizePadded)
+                        sendStringFunc(FTP_CONNECTION, localFileNameSizePadded)
                                 
                         #send file to client
-                        sendDownloadFile(SER2CLIENT_CONNECTION, localFileName)
+                        sendDownloadFile(FTP_CONNECTION, localFileName)
                         stopGetFlag = True
+                        FTP_CONNECTION.close()
+
                     #if file does not exist  ACK == NEst
                     else:
                         #send ACK
-                        sendACK(SER2CLIENT_CONNECTION, 3)
-                        if recieveACK(SER2CLIENT_CONNECTION) == "NCnt":
+                        sendACK(FTP_CONNECTION, 3)
+                        if recieveACK(FTP_CONNECTION) == "NCnt":
                             stopGetFlag = True
+                            FTP_CONNECTION.close()
 
             elif option == "putt":
-                print("put")
+                print("put") #option received
+
+                #make new FTP connection
+                DOWNLOAD_FTP_SOCKET = downloadFTPConnection(IP_TO_CONNECT)
+
+                #get FTP port number
+                FTP_PORT = DOWNLOAD_FTP_SOCKET.getsockname()[1]
+                FTP_PORT_padded = padString(str(FTP_PORT),40)
+
+                #send FTP port number
+                sendStringFunc(SER2CLIENT_CONNECTION, FTP_PORT_padded)
+                sendStringFunc(SER2CLIENT_CONNECTION, str(FTP_PORT))
+
+                #set new connection for FTP
+                FTP_CONNECTION, newaddr = DOWNLOAD_FTP_SOCKET.accept()
+                print('\t\tFTP Connection Established on Port:', FTP_PORT)
+
                 stopPutFlag = False
                 while(not stopPutFlag):
-                    #check if client is okay to send connection
-                    ack = recieveACK(SER2CLIENT_CONNECTION)
+                    ack = recieveACK(FTP_CONNECTION)
+                    
                     if ack == "Okay":
-                        #receive the fileName's name size
-                        fileNameSize = int(recieveStringFunc(SER2CLIENT_CONNECTION,40))
-                        
-                        #receive the fileName's name
-                        fileName = recieveStringFunc(SER2CLIENT_CONNECTION, fileNameSize)
+                        #receive size of file's name, the file's name, and file's size
+                        fileNameSize = int(recieveStringFunc(FTP_CONNECTION,40))
+                        fileName = recieveStringFunc(FTP_CONNECTION, fileNameSize)
+                        fileSize = int(recieveStringFunc(FTP_CONNECTION, 40))
 
-                        #receive the file's size
-                        updateFileSize = int(recieveStringFunc(SER2CLIENT_CONNECTION, 40))
+                        #receive the file from client
+                        downloadFile(FTP_CONNECTION, fileName, fileSize, "client")
 
-                        #receive the file's data from the client
-                        downloadFile(SER2CLIENT_CONNECTION, fileName, updateFileSize, "client")
-                        stopPutFlag = True
+                        #receive file from client complete
+                        print('\t\tFile Successfully Retrieved')
+                        if recieveACK(FTP_CONNECTION) == "NCnt":
+                            stopPutFlag = True
+                            FTP_CONNECTION.close()
+                            print('\t\tFTP Connection Closed')
+
                     else:
-                        #client is not able to send a file
-                        print("Client could not upload file")
-                        if recieveACK(SER2CLIENT_CONNECTION) == "NCnt":
-                            stopGetFlag = True
+                        print('\t\tError on Client Side')
+                        if recieveACK(FTP_CONNECTION) == "NCnt":
+                            stopPutFlag = True
+                            FTP_CONNECTION.close()
+                            print('\t\tFTP Connection Closed')
 
             elif option == "lsls":
                 print("ls")
@@ -108,4 +153,3 @@ while 1:
     finally:
         print("Close connection")
         SER2CLIENT_CONNECTION.close()
-

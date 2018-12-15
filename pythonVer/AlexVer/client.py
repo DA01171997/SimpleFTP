@@ -1,33 +1,15 @@
-import sys, re
+import sys
 from socket import *
 from supportFunc import *
 
-IP_PATTERN = re.compile("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
-PORT_PATTERN = re.compile("[0-9]{1,5}")
-
-if len(sys.argv) == 1:
-    sys.exit('Error -- Must have IP and Port Number Args')
-elif len(sys.argv) == 2:
-    if bool(IP_PATTERN.match(sys.argv[1])) != True:
-        print('Error:', sys.argv[1], 'does not match the correct IP format')
-    print('Error: Port Number argument not supplied')
+#check to see if cmd line args are correct
+if regexArgChecks(sys.argv) != True:
     sys.exit(0)
-elif len(sys.argv) == 3:
-    err = 0
-    if bool(IP_PATTERN.match(sys.argv[1])) != True:
-        print('Error:', sys.argv[1], 'does not match the correct IP format')
-        err = 1
-    if bool(PORT_PATTERN.match(sys.argv[2])) != True:
-        print('Error:', sys.argv[2], 'does not match the correct Port Number format')
-        err = 1
-    if err == 1:
-        sys.exit(0)
-
 
 IP_TO_CONNECT = sys.argv[1]
 PORT_NUMBER = int(sys.argv[2])
 
-PORT_NUM = 8080
+#PORT_NUM = 8080
 CLIENT_SOCK = socket(AF_INET, SOCK_STREAM)
 CLIENT_SOCK.connect((IP_TO_CONNECT, PORT_NUMBER))
 #CLIENT_SOCK.connect(('localhost', PORT_NUM))
@@ -45,10 +27,23 @@ print("What would you like to do?")
 menu()
 while(not quitFlag):
     option = getMenuOption()
+
     if option == "get":
         option="gett"
-        sendStringFunc(CLIENT_SOCK,option)
         
+        #send option put to server
+        sendStringFunc(CLIENT_SOCK,option)
+
+        #receive port number size from server
+        FTP_PORT_size = int(recieveStringFunc(CLIENT_SOCK, 40))
+
+        #receive port number from server
+        FTP_PORT = int(recieveStringFunc(CLIENT_SOCK, FTP_PORT_size))
+
+        #set new connection for FTP
+        UPLOAD_FTP_SOCKET = uploadFTPConnection(IP_TO_CONNECT, FTP_PORT)
+        print('FTP Connection Established on Port:', FTP_PORT)
+
         stopGetFlag = False
         while(not stopGetFlag):
             #get what file user wants to send
@@ -56,72 +51,95 @@ while(not quitFlag):
 
             #send server size of fileName
             fileNameSizePadded = padString(fileName,40)
-            sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
+            sendStringFunc(UPLOAD_FTP_SOCKET,fileNameSizePadded)
 
             #send server the fileName
-            sendStringFunc(CLIENT_SOCK, fileName)
+            sendStringFunc(UPLOAD_FTP_SOCKET, fileName)
 
             #check ACK
-            ack = recieveACK(CLIENT_SOCK)
+            ack = recieveACK(UPLOAD_FTP_SOCKET)
             if ack=="Exst":
 
                 #get size of file from server
-                downloadFileSize = int(recieveStringFunc(CLIENT_SOCK, 40))
+                downloadFileSize = int(recieveStringFunc(UPLOAD_FTP_SOCKET, 40))
                 print('downloadFileSize is', downloadFileSize)
 
                 #download file from server
-                downloadFile(CLIENT_SOCK, fileName, downloadFileSize, "server")
+                downloadFile(UPLOAD_FTP_SOCKET, fileName, downloadFileSize, "server")
 
+                UPLOAD_FTP_SOCKET.close()
                 stopGetFlag = True
             else:
                 print("File doesn't exist")
                 #continue get or quit?
                 if(not continueOption()):
                     stopGetFlag = True
-                    sendACK(CLIENT_SOCK,5)
+                    sendACK(UPLOAD_FTP_SOCKET,5)
+                    UPLOAD_FTP_SOCKET.close()
                 else:
-                    sendACK(CLIENT_SOCK,1)
+                    sendACK(UPLOAD_FTP_SOCKET,1)
      
     elif option == "put":
         option="putt"
+
+        #send option put to server
         sendStringFunc(CLIENT_SOCK,option)
 
+        #receive port number size from server
+        FTP_PORT_size = int(recieveStringFunc(CLIENT_SOCK, 40))
+
+        #receive port number from server
+        FTP_PORT = int(recieveStringFunc(CLIENT_SOCK, FTP_PORT_size))
+
+        #set new connection for FTP
+        UPLOAD_FTP_SOCKET = uploadFTPConnection(IP_TO_CONNECT, FTP_PORT)
+        print('FTP Connection Established on Port:', FTP_PORT)
+
         stopPutFlag = False
+        fileExists = False
         while(not stopPutFlag):
-            #put what file user wants to upload
-            fileName = input("What file would you like to upload to server? ")
+            #input name of file to upload
+            fileName = input("File to upload: ")
 
-            #if file exists on client side
-            if checkFileExist(fileName,"client"):
-                sendACK(CLIENT_SOCK, 1)
+            if checkFileExist(fileName, "client"):
+                #send Okay to server to be ready to send file
+                sendACK(UPLOAD_FTP_SOCKET, 1)
 
-                #upload fileName's name size to server
-                fileNameSizePadded = padString(fileName,40)
-                sendStringFunc(CLIENT_SOCK,fileNameSizePadded)
-
-                #upload fileName's name to server
-                sendStringFunc(CLIENT_SOCK, fileName)
-
-                #get localFileName size and pad from client side
+                #get size of file's name, the file's name, and file's size
+                fileNameSizePadded = padString(fileName, 40)
                 localFileNameSize = os.path.getsize(fileName)
                 localFileNameSizePadded = padFileNameSize(localFileNameSize, 40)
 
-                #upload the size of file to server
-                sendStringFunc(CLIENT_SOCK, localFileNameSizePadded)
+                #send size of file's name, the file's name, and file's size
+                sendStringFunc(UPLOAD_FTP_SOCKET, fileNameSizePadded)
+                sendStringFunc(UPLOAD_FTP_SOCKET, fileName)
+                sendStringFunc(UPLOAD_FTP_SOCKET, localFileNameSizePadded)
 
-                #upload file to server
-                sendDownloadFile(CLIENT_SOCK, fileName)
-                stopPutFlag = True
-            else:
-                print("File cannot be uploaded -- does not exist")
-                sendACK(CLIENT_SOCK, 0)
-                #continue put or quit
-                if(not continueOption()):
+                #upload the file to server
+                sendDownloadFile(UPLOAD_FTP_SOCKET, fileName)
+
+                #upload of file to server complete
+                print('Successfully Uploaded')
+                if not continueOption():
                     stopPutFlag = True
-                    sendACK(CLIENT_SOCK,5)
+                    sendACK(UPLOAD_FTP_SOCKET, 5)
+                    UPLOAD_FTP_SOCKET.close()
+                    print('FTP Connection Closed')
                 else:
-                    sendACK(CLIENT_SOCK,1)
+                    sendACK(UPLOAD_FTP_SOCKET, 4)
 
+            else:
+                sendACK(UPLOAD_FTP_SOCKET, 0)
+                print('Cannot Upload -- File Does Not Exist')
+                
+                if not continueOption():
+                    stopPutFlag = True
+                    sendACK(UPLOAD_FTP_SOCKET, 5)
+                    UPLOAD_FTP_SOCKET.close()
+                    print('FTP Connection Closed')
+                else:
+                    sendACK(UPLOAD_FTP_SOCKET, 4)
+                
     elif option == "ls":
         option="lsls"
         sendStringFunc(CLIENT_SOCK,option)
