@@ -33,6 +33,23 @@ Setup Instructions:
 			fileOnServer/ subdirectory. Any file that is put on 
 			the server by the client will also be placed in the 
 			fileOnServer/ subdirectory.
+			
+Setup should looks something like this:
+~/.../clientSide/ - .
+		    |- ./DLFromServer/ - . <---(This sub directory get created when client "get" from server)
+				          |- arbitrary files "get" from server
+		    |- client.py
+		    |- supportFunc.py
+		    |- arbitrary files that client want to "put" on server					
+		    |- arbitrary files that client want to "put" on server
+
+~/.../serverSide/ - .
+		    |- ./fileOnServer/ - . <---(*Need* to manually create this sub directory, place files for client to "get" in here)
+				         |- arbitrary files for client to "get"
+				         |- arbitrary files that client "put" will also be in here
+		    |- server.py
+		    |- supportFunc.py
+		
 User Options:
 	1.	get - download file
 	2.	put - upload file
