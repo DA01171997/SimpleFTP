@@ -1,5 +1,5 @@
 SIMPLE FTP
-Implemented by: Alex Truong, Astha Sharma, Duy Do
+Implemented by: Alex Truong, Astha Sharma, Duy Do with Python3
 Last Updated: 12/19/2018
 
 Purpose: 
@@ -13,8 +13,8 @@ Setup Instructions:
 	1.	Both client.py and server.py need it own copy of supportFunc.py.
 	2.	Both client.py and server.py takes in two inputs to the script.
 	3.	Run the server.py script before the client.py script. 
-	4.	client.py  <IP> <PORTNUM>
-	5.	server.py <IP> <PORTNUM>
+	4.	./python3 client.py <IP> <PORTNUM>
+	5.	./python3 server.py <IP> <PORTNUM>
 	6.	Setup for client.py
 		a.	Place client.py and supportFunc.py in the same parent directory 
 			that contains files that you wish to put on server. 
@@ -33,7 +33,7 @@ Setup Instructions:
 			fileOnServer/ subdirectory. Any file that is put on 
 			the server by the client will also be placed in the 
 			fileOnServer/ subdirectory.
-
+			
 Setup should looks something like this:
 ~/.../clientSide/ - .
 		    |- ./DLFromServer/ - . <---(This sub directory get created when client "get" from server)
@@ -49,7 +49,7 @@ Setup should looks something like this:
 				         |- arbitrary files that client "put" will also be in here
 		    |- server.py
 		    |- supportFunc.py
-			
+		
 User Options:
 	1.	get - download file
 	2.	put - upload file
