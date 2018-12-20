@@ -55,4 +55,4 @@ User Options:
 	2.	put - upload file
 	3.	ls - list files
 	4.	help - print options
-	5.	quit - terminate program
+	5.	quit - terminate program 
